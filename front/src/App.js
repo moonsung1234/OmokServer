@@ -1,6 +1,15 @@
 
 import React from "react";
 import Omok from "./omok";
+import io from "socket.io-client";
+
+let socket = io.connect(window.location.href);
+
+socket.on("full", () => {
+  alert("Other players already playing now. Try later.");
+
+  socket.disconnect();
+});
 
 class Board extends React.Component {
   constructor(props) {
@@ -9,6 +18,26 @@ class Board extends React.Component {
     this.omok = new Omok();
     this.omok.set();
     this.state = { board : this.omok.board };
+
+    socket.on("end", () => {
+      alert("disconnect");
+    
+      this.socket.set();
+
+      socket.disconnect();
+    });
+
+    socket.on("turn", turn => {
+      this.turn = turn;
+    });
+
+    socket.on("put", pos => {
+      let [x, y] = pos;
+
+      this.put(x, y);
+
+      // alert("상대방이 뒀습니다.");
+    });
   }
 
   set() {
@@ -34,7 +63,7 @@ class Board extends React.Component {
             }} 
             key={`${i} ${j}`}
             id={`${i} ${j}`}
-            onClick={this.put.bind(this)}>
+            onClick={this.click.bind(this)}>
           </div>
         );
       }
@@ -54,17 +83,27 @@ class Board extends React.Component {
     return board;
   }
 
-  put(e) {
-    let target = e.target
-    let [x, y] = target.id.split(" ").map(n => parseInt(n));
+  put(x, y) {
+    this.setState({ board : this.omok.board });
 
     if(this.omok.put(x, y)) {
       alert(this.omok.turn + " win!");
       
       this.omok.set();
-    }
 
-    this.setState({ board : this.omok.board });
+      socket.emit("end", "");
+    }
+  }
+
+  click(e) {
+    if(this.turn != this.omok.turn) return;
+
+    let target = e.target
+    let [x, y] = target.id.split(" ").map(n => parseInt(n));
+
+    socket.emit("put", [x, y]);
+    
+    this.put(x, y);
   }
 
   render() {
