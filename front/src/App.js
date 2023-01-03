@@ -14,24 +14,6 @@ class Board extends React.Component {
     this.state = { board : this.omok.board };
     this.turn = this.props.turn;
 
-    socket.on("full", () => {
-      alert("Other players already playing now. Try later.");
-
-      socket.disconnect();
-
-      this.props.tostart();
-    });
-
-    socket.on("end", () => {
-      alert("disconnect");
-    
-      this.socket.set();
-
-      socket.disconnect();
-
-      this.props.tostart();
-    });
-
     socket.on("put", pos => {
       let [x, y] = pos;
 
@@ -90,9 +72,10 @@ class Board extends React.Component {
     if(this.omok.put(x, y)) {
       alert(this.omok.turn + " win!");
       
-      this.omok.set();
-
       socket.emit("end", "");
+      
+      this.omok.set();
+      this.props.tostart();
     }
   }
 
@@ -273,7 +256,7 @@ class Main extends React.Component {
   }
 
   start() {
-    this.setState({ component : <Start /> });
+    this.setState({ component : <Start tologin={this.match.bind(this)} /> });
   }
 
   login() {

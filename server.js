@@ -7,7 +7,52 @@ let app = express();
 let server = http.createServer(app);
 let io = socket(server);
 
-let players = [];
+class Matcher {
+    constructor() {
+        this.matches = [];
+        this.players = [];
+    }
+
+    add(sk) {
+        if(this.players.length != 0) {
+            let match_player = this.players.shift();
+            let turn = ["1", "2"][Math.floor(Math.random() * 2)];
+
+            match_player.emit("match", turn);
+            sk.emit("match", turn == "1"? "2" : "1");
+
+            this.matches.push([sk, match_player]);
+        
+        } else {
+            this.players.push(sk);
+        }
+    }
+
+    find(sk) {
+        for(let i in this.matches) {
+            if(this.matches.map(n => n.id).indexOf(sk.id) != -1) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    delete(sk) {
+        let match_index = this.find(sk);
+        let player_index = this.players.map(n => n.id).indexOf(sk.id);
+
+        if(match_index != -1) {
+            this.matches.splice(match_index, 1);
+        }
+
+        if(player_index != -1) {
+            this.players.splice(player_index, 1);
+        }
+    }
+}
+
+let matcher = new Matcher();
 
 app.use("/", express.static(__dirname + "/front/build"));
 
@@ -18,39 +63,20 @@ app.get("/", (req, res) => {
 io.on("connection", (sk) => {
     console.log("connect : " + sk.id);
 
-    if(players.length < 2) {
-        players.push([sk.id, sk]);
-        
-        if(players.length == 2) {
-            let [black, white] = ['1', '2'];
-        
-            players[0][1].emit("match", black);
-            players[1][1].emit("match", white);
-        }
-    
-    } else {
-        sk.emit("full", "");
-    }
+    matcher.add(sk);
 
     sk.on("put", pos => {
         sk.broadcast.emit("put", pos);
     });
 
     sk.on("end", () => {
-        players.map(n => {
-            n[1].emit("end", "");
-        });
-
-        players = [];
+        matcher.delete(sk);
     });
 
     sk.on("disconnect", () => {
         console.log("disconnect : " + sk.id);
 
-        let index = players.map(n => n[0]).indexOf(sk.id);
-
-        if(index != -1)
-            players.splice(index, 1);
+        matcher.delete(sk);
     });
 });
 
