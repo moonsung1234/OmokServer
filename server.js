@@ -24,8 +24,8 @@ io.on("connection", (sk) => {
         if(players.length == 2) {
             let [black, white] = ['1', '2'];
         
-            players[0][1].emit("turn", black);
-            players[1][1].emit("turn", white);
+            players[0][1].emit("match", black);
+            players[1][1].emit("match", white);
         }
     
     } else {

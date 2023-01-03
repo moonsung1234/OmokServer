@@ -3,13 +3,7 @@ import React from "react";
 import Omok from "./omok";
 import io from "socket.io-client";
 
-let socket = io.connect(window.location.href);
-
-socket.on("full", () => {
-  alert("Other players already playing now. Try later.");
-
-  socket.disconnect();
-});
+let socket = null;
 
 class Board extends React.Component {
   constructor(props) {
@@ -18,6 +12,15 @@ class Board extends React.Component {
     this.omok = new Omok();
     this.omok.set();
     this.state = { board : this.omok.board };
+    this.turn = this.props.turn;
+
+    socket.on("full", () => {
+      alert("Other players already playing now. Try later.");
+
+      socket.disconnect();
+
+      this.props.tostart();
+    });
 
     socket.on("end", () => {
       alert("disconnect");
@@ -25,10 +28,8 @@ class Board extends React.Component {
       this.socket.set();
 
       socket.disconnect();
-    });
 
-    socket.on("turn", turn => {
-      this.turn = turn;
+      this.props.tostart();
     });
 
     socket.on("put", pos => {
@@ -115,9 +116,202 @@ class Board extends React.Component {
   }
 }
 
+class Start extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  render() {
+    return (
+      <div 
+        id="start"
+        style={{ 
+          width: "100%",
+          height: "100%"
+        }}
+      >
+        <div 
+          id="title"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            height: "50%",
+            textAlign: "center",
+            fontSize: "10vw",
+            fontWeight: "bold"
+          }}
+        >
+          O<div style={{color: "white"}}>m</div>o<div style={{color: "white"}}>k</div> &nbsp; <div style={{color: "brown"}}>Online</div>
+        </div>
+        <div 
+          id="button"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            width: "100%",
+            height: "50%",
+          }}
+        >
+          <input 
+            type="button" 
+            value="Log In"
+            onClick={this.props.tologin}
+            style={{
+              width: "20vw",
+              height: "10vh",
+              borderRadius: "50px",
+              fontSize: "2.5vw",
+              fontWeight: "bold",
+              border: "2px solid white"
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+}
+
+class Login extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  render() {
+    return (
+      <div 
+        id="login"
+        style={{ 
+          width: "100%",
+          height: "100%"
+        }}
+      >
+      </div>
+    );
+  }
+}
+
+class SignUp extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  render() {
+    return (
+      <div 
+        id="signup"
+        style={{ 
+          width: "100%",
+          height: "100%"
+        }}
+      >
+      </div>
+    );
+  }
+}
+
+class Match extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = { title : "Matching" };
+
+    this.match();
+  }
+
+  match() {
+    this.iter = setInterval(() => {
+      if(this.state.title == "Matching...") {
+        this.setState({ title : "Matching" });
+      
+      } else {
+        this.setState({ title : this.state.title + "." });
+      }
+    }, 300);
+
+    socket = io.connect(window.location.href);
+
+    socket.on("match", turn => {
+      this.props.toboard(turn);
+    });
+  }
+
+  render() {
+    return (
+      <div 
+        id="match"
+        style={{ 
+          width: "100%",
+          height: "100%"
+        }}
+      >
+        <div 
+          id="title"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            height: "100%",
+            fontSize: "7vw",
+            fontWeight: "bold"
+          }}
+        >
+          {this.state.title}
+        </div>
+      </div>
+    );
+  }
+}
+
+class Main extends React.Component {
+  constructor(props) {
+    super(props);
+  
+    this.state = { component : <Start tologin={this.match.bind(this)} /> };
+  }
+
+  start() {
+    this.setState({ component : <Start /> });
+  }
+
+  login() {
+    this.setState({ component : <Login /> });
+  }
+
+  signup() {
+    this.setState({ component : <SignUp /> });
+  }
+
+  match() {
+    this.setState({ component : <Match toboard={this.board.bind(this)} /> });
+  }
+
+  board(turn) {
+    this.setState({ component : <Board turn={turn} tostart={this.start.bind(this)} /> });
+  }
+
+  render() {
+    return (
+      <div 
+        id="background"
+        style={{
+          display: "block",
+          width: "100vw",
+          height: "100vh",
+          background: "#FFCC99"
+        }}
+      >
+        {this.state.component}
+      </div>
+    );
+  }
+}
+
 function App() {
   return (
-    <Board />
+    <Main />
   );
 }
 
