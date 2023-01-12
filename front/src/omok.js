@@ -2,8 +2,9 @@
 // 렌주룰
 class Omok {
     constructor() {
-        this.board_size = [15, 15];
+        this.board_size = [17, 17];
         this.board = [];
+        this.border_c = '-1';
         this.space_c = '0';
         this.black_c = '1';
         this.white_c = '2';
@@ -13,9 +14,35 @@ class Omok {
         this.board = [];
         this.turn = this.black_c;
 
-        for(let i=0; i<this.board_size[0]; i++) {
-            this.board.push(this.space_c.repeat(this.board_size[1]).split(""));
+        this.board.push(this.border_c.repeat(this.board_size[1]).split(""));
+
+        for(let i=0; i<this.board_size[0]-2; i++) {
+            let line = this.space_c.repeat(this.board_size[1] - 2).split("");
+            
+            line.unshift(this.border_c);
+            line.push(this.border_c);
+
+            this.board.push(line);
         }
+
+        this.board.push(this.border_c.repeat(this.board_size[1]).split(""));
+    }
+
+    get() {
+        let temp = [];
+
+        for(let i=1; i<this.board_size[0]-1; i++) {
+            let line = this.board[i];
+            let temp_line = this.space_c.repeat(this.board_size[1] - 2).split("");
+
+            for(let j=0; j<temp_line.length; j++) {
+                temp_line[j] = line[j + 1]
+            }
+
+            temp.push(temp_line);
+        }
+
+        return temp;
     }
 
     compare(arr1, arr2) {
@@ -34,16 +61,14 @@ class Omok {
             [this.space_c, this.space_c, this.turn, this.turn, this.space_c, this.turn, this.space_c, this.space_c],
             [this.space_c, this.space_c, this.turn, this.space_c, this.turn, this.turn, this.space_c, this.space_c],
             [other, this.space_c, this.turn, this.turn, this.turn, this.space_c, this.space_c],
-            [this.space_c, this.turn, this.turn, this.turn, this.space_c, this.space_c],
-            [this.space_c, this.turn, this.turn, this.space_c, this.turn, this.space_c, this.space_c],
-            [this.space_c, this.turn, this.space_c, this.turn, this.turn, this.space_c, this.space_c],
-            [this.space_c, this.space_c, this.turn, this.turn, this.turn, this.space_c],
-            [this.space_c, this.space_c, this.turn, this.turn, this.space_c, this.turn, this.space_c],
-            [this.space_c, this.space_c, this.turn, this.space_c, this.turn, this.turn, this.space_c],
-            [other, this.space_c, this.turn, this.turn, this.turn, this.space_c, this.space_c],
-            [other, this.space_c, this.turn, this.turn, this.turn, this.space_c, this.space_c],
             [other, this.space_c, this.turn, this.turn, this.space_c, this.turn, this.space_c, this.space_c],
             [other, this.space_c, this.turn, this.space_c, this.turn, this.turn, this.space_c, this.space_c],
+            [this.border_c, this.space_c, this.turn, this.turn, this.turn, this.space_c, this.space_c],
+            [this.border_c, this.space_c, this.turn, this.turn, this.space_c, this.turn, this.space_c, this.space_c],
+            [this.border_c, this.space_c, this.turn, this.space_c, this.turn, this.turn, this.space_c, this.space_c],
+            [this.space_c, this.space_c, this.turn, this.turn, this.turn, this.space_c, this.border_c],
+            [this.space_c, this.space_c, this.turn, this.turn, this.space_c, this.turn, this.space_c, this.border_c],
+            [this.space_c, this.space_c, this.turn, this.space_c, this.turn, this.turn, this.space_c, this.border_c],
             [this.space_c, this.space_c, this.turn, this.turn, this.turn, this.space_c, other],
             [this.space_c, this.space_c, this.turn, this.turn, this.space_c, this.turn, this.space_c, other],
             [this.space_c, this.space_c, this.turn, this.space_c, this.turn, this.turn, this.space_c, other]
@@ -469,7 +494,10 @@ class Omok {
         return false;
     }
 
-    put(x, y) {
+    put(_x, _y) {
+        let x = _x + 1;
+        let y = _y + 1;
+
         if(this.board[x][y] != this.space_c) return false;
 
         this.board[x][y] = this.turn;
@@ -489,6 +517,8 @@ class Omok {
         }
 
         this.turn = this.turn == this.black_c? this.white_c : this.black_c;
+
+        return null;
     }
 
     print() {

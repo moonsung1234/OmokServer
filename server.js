@@ -7,76 +7,70 @@ let app = express();
 let server = http.createServer(app);
 let io = socket(server);
 
-class Matcher {
-    constructor() {
-        this.matches = [];
-        this.players = [];
-    }
+let login = require("./route/login");
+let Matcher = require("./route/match");
+let Launcher = require("./route/launch");
+let matcher = new Matcher(); 
+let launcher = new Launcher();
 
-    add(sk) {
-        if(this.players.length != 0) {
-            let match_player = this.players.shift();
-            let turn = ["1", "2"][Math.floor(Math.random() * 2)];
-
-            match_player.emit("match", turn);
-            sk.emit("match", turn == "1"? "2" : "1");
-
-            this.matches.push([sk, match_player]);
-        
-        } else {
-            this.players.push(sk);
-        }
-    }
-
-    find(sk) {
-        for(let i in this.matches) {
-            if(this.matches.map(n => n.id).indexOf(sk.id) != -1) {
-                return i;
-            }
-        }
-
-        return -1;
-    }
-
-    delete(sk) {
-        let match_index = this.find(sk);
-        let player_index = this.players.map(n => n.id).indexOf(sk.id);
-
-        if(match_index != -1) {
-            this.matches.splice(match_index, 1);
-        }
-
-        if(player_index != -1) {
-            this.players.splice(player_index, 1);
-        }
-    }
-}
-
-let matcher = new Matcher();
-
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: false }));
 app.use("/", express.static(__dirname + "/front/build"));
 
 app.get("/", (req, res) => {
     res.sendFile(__dirname + "/front/public/index.html");
 });
 
-io.on("connection", (sk) => {
-    console.log("connect : " + sk.id);
+app.use("/login", login);
 
-    matcher.add(sk);
-
-    sk.on("put", pos => {
-        sk.broadcast.emit("put", pos);
+io.on("connection", sk => {
+    sk.on("info", info => {
+        matcher.add({
+            "player" : JSON.parse(info),
+            "sk" : sk
+        });
     });
 
-    sk.on("end", () => {
-        matcher.delete(sk);
+    sk.on("put", pos => {
+        matcher.send(sk, {
+            "name" : "put",
+            "data" : pos
+        });
+    });
+
+    sk.on("end", data => {
+        let players = JSON.parse(data);
+
+        matcher.delete(sk).map(p => {
+            for(let i in players) {
+                if(p.player.id == players[i].id) {
+                    players[i].state == "win"? launcher.win(p.player) : launcher.lose(p.player);
+                    
+                    p.sk.emit("end", "");
+                }
+            }
+        });
+    });
+
+    sk.on("win", info => {
+        launcher.win(JSON.parse(info));
+
+        sk.emit("end", "");
     });
 
     sk.on("disconnect", () => {
-        console.log("disconnect : " + sk.id);
-
-        matcher.delete(sk);
+        if(matcher.find(sk) != -1) {
+            matcher.delete(sk).map(p => {
+                if(p.sk.id == sk.id) {
+                    launcher.lose(p.player);
+                }
+                
+                p.sk.emit("out", "");
+            });
+        
+        } else {
+            matcher.delete(sk);
+        }
     });
 });
 
