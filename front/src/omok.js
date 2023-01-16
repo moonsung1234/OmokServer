@@ -4,10 +4,10 @@ class Omok {
     constructor() {
         this.board_size = [17, 17];
         this.board = [];
-        this.border_c = '-1';
         this.space_c = '0';
         this.black_c = '1';
         this.white_c = '2';
+        this.border_c = '3';
     }
     
     set() {
@@ -146,7 +146,7 @@ class Omok {
                 if((j < 0) || (r > this.board_size[1] - 1) || (j + open_3[i].length - 1 > this.board_size[0] - 1) || (r - open_3[i].length + 1 < 0)) continue;
     
                 let target = this.board.slice(j, j + open_3[i].length).map((n, idx) => n[r - idx]);
-    
+
                 if(this.compare(target, open_3[i])) {
                     return [j, r, open_3[i]];
                 }
@@ -183,14 +183,17 @@ class Omok {
                 if(h) {
                     let [hx, hy, hopen_3] = h;
         
-                    for(let n=j; n<j+hopen_3.length; n++) {
-                        if(this.board[i][n] != this.turn) continue;
+                    for(let n=hy; n<hy+hopen_3.length; n++) {
+                        if(this.board[hx][n] != this.turn) continue;
 
-                        let v = this.check_3_3_v(i, n);
-                        let rs = this.check_3_3_rs(i, n);
-                        let ls = this.check_3_3_ls(i, n);
-        
-                        if(v || rs || ls) return true;
+                        let v = this.check_3_3_v(hx, n);
+                        let rs = this.check_3_3_rs(hx, n);
+                        let ls = this.check_3_3_ls(hx, n);
+                        
+                        console.log("h " + v + ", " + rs + ", " + ls);
+                        if(v || rs || ls) {
+                            return true;
+                        }
                     }
                 }
 
@@ -200,14 +203,17 @@ class Omok {
                 if(v) {
                     let [vx, vy, vopen_3] = v;
         
-                    for(let n=j; n<j+vopen_3.length; n++) {
-                        if(this.board[i][n] != this.turn) continue;
+                    for(let n=vx; n<vx+vopen_3.length; n++) {
+                        if(this.board[n][vy] != this.turn) continue;
 
-                        let h = this.check_3_3_h(i, n);
-                        let rs = this.check_3_3_rs(i, n);
-                        let ls = this.check_3_3_ls(i, n);
+                        let h = this.check_3_3_h(n, vy);
+                        let rs = this.check_3_3_rs(n, vy);
+                        let ls = this.check_3_3_ls(n, vy);
         
-                        if(h || rs || ls) return true;
+                        console.log("v " + h + ", " + rs + ", " + ls);
+                        if(h || rs || ls) {
+                            return true;
+                        }
                     }
                 }
 
@@ -217,14 +223,17 @@ class Omok {
                 if(rs) {
                     let [rsx, rsy, rsopen_3] = rs;
         
-                    for(let n=j; n<j+rsopen_3.length; n++) {
-                        if(this.board[i][n] != this.turn) continue;
+                    for(let [n, r] = [rsx, rsy]; n<=rsx+rsopen_3.length-1 && r>=rsy-rsopen_3.length+1; [n++, r--]) {
+                        if(this.board[n][r] != this.turn) continue;
 
-                        let h = this.check_3_3_h(i, n);
-                        let v = this.check_3_3_v(i, n);
-                        let ls = this.check_3_3_ls(i, n);
+                        let h = this.check_3_3_h(n, r);
+                        let v = this.check_3_3_v(n, r);
+                        let ls = this.check_3_3_ls(n, r);
         
-                        if(h || v || ls) return true;
+                        console.log("rs " + h + ", " + v + ", " + ls);
+                        if(h || v || ls) {
+                            return true;
+                        }
                     }
                 }
 
@@ -234,14 +243,17 @@ class Omok {
                 if(ls) {
                     let [lsx, lsy, lsopen_3] = ls;
         
-                    for(let n=j; n<j+lsopen_3.length; n++) {
-                        if(this.board[i][n] != this.turn) continue;
+                    for(let [n, r] = [lsx, lsy]; n<=lsx+lsopen_3.length && r<=lsy+lsopen_3.length; [n++, r++]) {
+                        if(this.board[n][r] != this.turn) continue;
 
-                        let h = this.check_3_3_h(i, n);
-                        let v = this.check_3_3_v(i, n);
-                        let rs = this.check_3_3_rs(i, n);
+                        let h = this.check_3_3_h(n, r);
+                        let v = this.check_3_3_v(n, r);
+                        let rs = this.check_3_3_rs(n, r);
         
-                        if(h || v || rs) return true;
+                        console.log("ls " + h + ", " + v + ", " + rs);
+                        if(h || v || rs) {
+                            return true;
+                        }
                     }
                 }
             }
@@ -331,14 +343,17 @@ class Omok {
                 if(h) {
                     let [hx, hy, hopen_4] = h;
         
-                    for(let n=j; n<j+hopen_4.length; n++) {
-                        if(this.board[i][n] != this.turn) continue;
+                    for(let n=hy; n<hy+hopen_4.length; n++) {
+                        if(this.board[hx][n] != this.turn) continue;
 
-                        let v = this.check_4_4_v(i, n);
-                        let rs = this.check_4_4_rs(i, n);
-                        let ls = this.check_4_4_ls(i, n);
-        
-                        if(v || rs || ls) return true;
+                        let v = this.check_4_4_v(hx, n);
+                        let rs = this.check_4_4_rs(hx, n);
+                        let ls = this.check_4_4_ls(hx, n);
+                        
+                        console.log("h " + v + ", " + rs + ", " + ls);
+                        if(v || rs || ls) {
+                            return true;
+                        }
                     }
                 }
 
@@ -348,14 +363,17 @@ class Omok {
                 if(v) {
                     let [vx, vy, vopen_4] = v;
         
-                    for(let n=j; n<j+vopen_4.length; n++) {
-                        if(this.board[i][n] != this.turn) continue;
+                    for(let n=vx; n<vx+vopen_4.length; n++) {
+                        if(this.board[n][vy] != this.turn) continue;
 
-                        let h = this.check_4_4_h(i, n);
-                        let rs = this.check_4_4_rs(i, n);
-                        let ls = this.check_4_4_ls(i, n);
+                        let h = this.check_4_4_h(n, vy);
+                        let rs = this.check_4_4_rs(n, vy);
+                        let ls = this.check_4_4_ls(n, vy);
         
-                        if(h || rs || ls) return true;
+                        console.log("v " + h + ", " + rs + ", " + ls);
+                        if(h || rs || ls) {
+                            return true;
+                        }
                     }
                 }
 
@@ -365,14 +383,17 @@ class Omok {
                 if(rs) {
                     let [rsx, rsy, rsopen_4] = rs;
         
-                    for(let n=j; n<j+rsopen_4.length; n++) {
-                        if(this.board[i][n] != this.turn) continue;
+                    for(let [n, r] = [rsx, rsy]; n<=rsx+rsopen_4.length-1 && r>=rsy-rsopen_4.length+1; [n++, r--]) {
+                        if(this.board[n][r] != this.turn) continue;
 
-                        let h = this.check_4_4_h(i, n);
-                        let v = this.check_4_4_v(i, n);
-                        let ls = this.check_4_4_ls(i, n);
+                        let h = this.check_4_4_h(n, r);
+                        let v = this.check_4_4_v(n, r);
+                        let ls = this.check_4_4_ls(n, r);
         
-                        if(h || v || ls) return true;
+                        console.log("rs " + h + ", " + v + ", " + ls);
+                        if(h || v || ls) {
+                            return true;
+                        }
                     }
                 }
 
@@ -382,14 +403,17 @@ class Omok {
                 if(ls) {
                     let [lsx, lsy, lsopen_4] = ls;
         
-                    for(let n=j; n<j+lsopen_4.length; n++) {
-                        if(this.board[i][n] != this.turn) continue;
+                    for(let [n, r] = [lsx, lsy]; n<=lsx+lsopen_4.length && r<=lsy+lsopen_4.length; [n++, r++]) {
+                        if(this.board[n][r] != this.turn) continue;
 
-                        let h = this.check_4_4_h(i, n);
-                        let v = this.check_4_4_v(i, n);
-                        let rs = this.check_4_4_rs(i, n);
+                        let h = this.check_4_4_h(n, r);
+                        let v = this.check_4_4_v(n, r);
+                        let rs = this.check_4_4_rs(n, r);
         
-                        if(h || v || rs) return true;
+                        console.log("ls " + h + ", " + v + ", " + rs);
+                        if(h || v || rs) {
+                            return true;
+                        }
                     }
                 }
             }

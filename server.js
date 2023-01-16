@@ -41,6 +41,8 @@ io.on("connection", sk => {
     sk.on("end", data => {
         let players = JSON.parse(data);
 
+        console.log(players);
+
         matcher.delete(sk).map(p => {
             for(let i in players) {
                 if(p.player.id == players[i].id) {

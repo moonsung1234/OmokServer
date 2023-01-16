@@ -11,7 +11,7 @@ router.post("/", (req, res) => {
         id : id,
         password : password,
         win : 0,
-        loss : 0
+        lose : 0
     }
     let saved_player = launcher.find(player);
 

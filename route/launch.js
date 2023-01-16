@@ -24,7 +24,11 @@ class Launcher {
     }
 
     save(target) {
-        this.#save(JSON.stringify(target));
+        let data = JSON.parse(this.#load());
+
+        data[target.id] = target; 
+
+        this.#save(JSON.stringify(data));
     }
 
     get() {
@@ -37,7 +41,7 @@ class Launcher {
         let data = JSON.parse(this.#load());
         data[target.id]["win"] += 1;
 
-        this.save(data);
+        this.#save(JSON.stringify(data));
     }
 
     lose(target) {
@@ -46,7 +50,7 @@ class Launcher {
         let data = JSON.parse(this.#load());
         data[target.id]["lose"] += 1;
 
-        this.save(data);
+        this.#save(JSON.stringify(data));
     }
 }
 
