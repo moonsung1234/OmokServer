@@ -1,0 +1,26 @@
+{
+  "name": "omok_server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moonsung1234/OmokServer.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/moonsung1234/OmokServer/issues"
+  },
+  "homepage": "https://github.com/moonsung1234/OmokServer#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mysql2": "^3.0.1",
+    "react-device-detect": "^2.2.3",
+    "socket.io": "^4.5.4"
+  }
+}
