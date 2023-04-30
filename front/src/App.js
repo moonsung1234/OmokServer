@@ -12,6 +12,9 @@ import SignUp from "./signup";
 import Match from "./match";
 import Rank from "./rank";
 
+// img
+import OI from "./omok_img.PNG";
+
 let socket = io.connect(window.location.href);
 
 class Main extends React.Component {
@@ -19,6 +22,7 @@ class Main extends React.Component {
     super(props);
   
     this.state = { component : <Start is_mobile={isMobile} socket={socket} toplay={this.login.bind(this)} tomatch={this.match.bind(this)} torank={this.rank.bind(this)} /> };
+    this.is_call = false;
     // this.state = { component : <Rank /> }
   }
 
@@ -39,7 +43,7 @@ class Main extends React.Component {
   }
 
   board(info) {
-    this.setState({ component : <Board socket={socket} info={info} tostart={this.start.bind(this)} /> });
+    this.setState({ component : <Board is_mobile={isMobile} socket={socket} info={info} tostart={this.start.bind(this)} /> });
   }
 
   rank() {
@@ -47,6 +51,10 @@ class Main extends React.Component {
   }
 
   componentDidMount() {
+    if(this.is_call) return;
+
+    this.is_call = true;
+
     let ins = document.createElement('ins');
     let scr = document.createElement('script');
   
@@ -78,6 +86,8 @@ class Main extends React.Component {
       document.querySelector('#ad').style.width = "728px";
       document.querySelector('#ad').appendChild(ins);
       document.querySelector('#ad').appendChild(scr);
+
+      console.log("ad create!");
     }
   }
 
@@ -90,7 +100,7 @@ class Main extends React.Component {
           width: "100vw",
           height: "100vh",
           backgroundSize: "100% 50px",
-          background: "#FFCC99"
+          background: "#0A1929"
         }}
       >
         <div
@@ -98,7 +108,7 @@ class Main extends React.Component {
             display: "block",
             width: "100%",
             height: "85%",
-            background: "#FFCC99"
+            background: `url(${OI})`
           }}
         >
           {this.state.component}
@@ -108,7 +118,7 @@ class Main extends React.Component {
             display: "block",
             width: "100%",
             height: "15%",
-            background: "#FFCC99"
+            background: `url(${OI})`
           }}
         >
           <div 

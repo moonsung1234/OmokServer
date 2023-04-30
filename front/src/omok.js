@@ -530,7 +530,7 @@ class Omok {
             console.log("Wrong!");
 
             this.board[x][y] = this.space_c;
-
+            
             return false;
         }
 

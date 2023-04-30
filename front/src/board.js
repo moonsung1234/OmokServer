@@ -6,6 +6,7 @@ class Board extends React.Component {
     constructor(props) {
       super(props);
       
+      this.is_mobile = this.props.is_mobile;
       this.socket = this.props.socket;
       this.omok = new Omok();
       this.omok.set();
@@ -25,9 +26,12 @@ class Board extends React.Component {
       });
   
       this.socket.on("out", () => {
-        alert("상대방이 나갔습니다.");
-  
         this.socket.emit("win", JSON.stringify(this.player));
+
+        alert("상대방이 나갔습니다.");
+      
+        this.omok.set();
+        this.props.tostart();
       });
   
       this.socket.on("end", () => {
@@ -49,10 +53,72 @@ class Board extends React.Component {
           if(this.state.board[i][j] == this.omok.black_c) background_color = "black";
   
           line.push(
+            <td 
+              style={{ 
+                // display: "inline-block",
+                // width: "3vw",
+                // height: "100%",
+                // border: "1px solid brown",
+                background: background_color,
+                textAlign: "center",
+                color: "red",
+                fontWeight: "bold",
+                border : "1px solid brown",
+                borderCollapse : "collapse"
+              }}
+              key={`${i} ${j}`}
+              id={`${i} ${j}`}
+              onClick={this.click.bind(this)}>
+              {(i == this.state.pos[0] && j == this.state.pos[1])? "X" : "⠀"}
+            </td>
+          );
+        }
+  
+        board.push(
+          <tr 
+            key={i}
+            style={{
+              border : "1px solid brown",
+              borderCollapse : "collapse"
+            }}
+          >
+            {line}
+          </tr>
+        );
+      }
+  
+      return (
+        <table 
+          style={{
+            width: "100%",
+            height: "100%",
+            border : "1px solid brown",
+            borderCollapse : "collapse"
+          }}
+        >
+          {board}
+        </table>
+      );
+    }
+  
+    setMobile() {
+      let board = [];
+      let margin = parseInt(100 / (this.omok.board_size[0]-2));
+  
+      for(let i=0; i<this.omok.board_size[0]-2; i++) {
+        let line = [];
+  
+        for(let j=0; j<this.omok.board_size[1]-2; j++) {
+          let background_color = "#FFCC99";
+  
+          if(this.state.board[i][j] == this.omok.white_c) background_color = "white";
+          if(this.state.board[i][j] == this.omok.black_c) background_color = "black";
+  
+          line.push(
             <div 
               style={{ 
                 display: "inline-block",
-                width: "3vw",
+                width: margin + "vw",
                 height: "100%",
                 border: "1px solid brown",
                 background: background_color,
@@ -73,7 +139,7 @@ class Board extends React.Component {
             key={i}
             style={{
               width: "100%",
-              height: "3vw"
+              height: margin + "vw"
             }}>
             {line}
           </div>
@@ -82,7 +148,7 @@ class Board extends React.Component {
   
       return board;
     }
-  
+
     end() {
       let data = {};
       let result = this.omok.turn == this.turn? "win" : "lose";
@@ -125,24 +191,21 @@ class Board extends React.Component {
       this.put(x, y);
     }
   
-    render() {
+    renderMobile() {
       return (
         <div
           id="body"
           style={{
             width: "100vw",
-            height: "100vh",
-            display: "flex"
+            height: "100vh"
           }}
         >
           <div 
             id="fp"
             style={{
               background: "white",
-              width: "20%",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
+              width: "100%",
+              height: "15%",
               fontSize: "3vw",
               fontWeight: "bold",
               color: "black"
@@ -157,20 +220,18 @@ class Board extends React.Component {
           <div 
             id="board"
             style={{
-              width: "60%",
-              marginLeft: "7.5vw"
+              width: "100%",
+              height: "100vw"
             }}
           >
-            {this.set()}
+            {this.setMobile()}
           </div>
           <div 
             id="sp"
             style={{
               background: "gray",
-              width: "20%",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
+              width: "100%",
+              height: "15%",
               fontSize: "3vw",
               fontWeight: "bold",
               color: "black"
@@ -184,6 +245,72 @@ class Board extends React.Component {
           </div>
         </div>
       );
+    }
+
+    render() {
+      if(this.is_mobile) {
+        return this.renderMobile();
+
+      } else {
+        return (
+          <div
+            id="body"
+            style={{
+              width: "100vw",
+              height: "100vh",
+              display: "flex"
+            }}
+          >
+            <div 
+              id="fp"
+              style={{
+                background: "white",
+                width: "20%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                fontSize: "3vw",
+                fontWeight: "bold",
+                color: "black"
+              }}
+            >
+              <div 
+                id="title"
+              >
+                {this.turn == this.omok.white_c? this.player.id : this.props.info.player.id}
+              </div>
+            </div>
+            <div 
+              id="board"
+              style={{
+                width: "60%",
+                height: "100vh"
+              }}
+            >
+              {this.set()}
+            </div>
+            <div 
+              id="sp"
+              style={{
+                background: "gray",
+                width: "20%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                fontSize: "3vw",
+                fontWeight: "bold",
+                color: "black"
+              }}
+            >
+              <div 
+                id="title"
+              >
+                {this.turn == this.omok.black_c? this.player.id : this.props.info.player.id}
+              </div>
+            </div>
+          </div>
+        );
+      }
     }
 }
 

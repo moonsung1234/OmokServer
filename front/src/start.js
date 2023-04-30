@@ -1,6 +1,14 @@
 
-import React from "react";
+import * as React from "react";
 import axios from "axios";
+
+// mui
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import ComputerIcon from '@mui/icons-material/Computer';
+import SearchIcon from '@mui/icons-material/Search';
+import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
 
 class Start extends React.Component {
     constructor(props) {
@@ -72,7 +80,27 @@ class Start extends React.Component {
             height: "60%",
           }}
         > 
-          <input 
+          <Stack direction="column" spacing={5}>
+            <Button 
+              variant="contained" 
+              startIcon={<SportsEsportsIcon sx={{ width: "5vw", height: "5vh"}}/>}
+              size="large"
+              sx={{ width: "20vw", height: "10vh", fontSize: "1.5vw", fontWeight: "bolder", justifyContent: 'flex-start' }}
+              onClick={this.props.toplay}
+            > 
+              Online
+            </Button>
+            <Button 
+              variant="contained" 
+              startIcon={<ComputerIcon sx={{ width: "5vw", height: "5vh"}} />} 
+              size="large"
+              sx={{ width: "20vw", height: "10vh", fontSize: "1.5vw", fontWeight: "bolder", justifyContent: 'flex-start' }}
+              onClick={() => alert("개발중")}
+            >
+              Computer
+            </Button>
+          </Stack>
+          {/* <input 
             type="button" 
             value="Play"
             onClick={this.props.toplay}
@@ -88,7 +116,7 @@ class Start extends React.Component {
               marginBottom: "4vh",
               cursor: "pointer"
             }}
-          />
+          /> */}
         </div>
       );
     }
@@ -110,16 +138,16 @@ class Start extends React.Component {
             value="Play"
             onClick={this.props.toplay}
             style={{
-              backgroundColor: "white",
+              background: "rgba(251,75,2,1)",
+              boxShadow: "-7px -7px 20px 0px rgba(255,255,255,.9),-4px -4px 5px 0px rgba(255,255,255,.9),7px 7px 20px 0px rgba(0,0,0,.2),4px 4px 5px 0px rgba(0,0,0,.3)",
               display: "block",
               width: "60vw",
               height: "17vh",
               borderRadius: "50px",
               fontSize: "8vw",
               fontWeight: "bold",
-              border: "2px solid white",
               marginBottom: "4vh",
-              color: "black",
+              color: "white",
               cursor: "pointer"
             }}
           />
@@ -196,7 +224,7 @@ class Start extends React.Component {
               패
             </div>
           </div>
-          <input 
+          {/* <input 
             type="button" 
             value="Match"
             onClick={this.props.tomatch}
@@ -230,7 +258,27 @@ class Start extends React.Component {
               border: "2px solid white",
               cursor: "pointer"
             }}
-          />
+          /> */}
+          <Stack direction="column" spacing={2}>
+            <Button 
+              variant="contained" 
+              startIcon={<SearchIcon sx={{ width: "5vw", height: "5vh"}}/>}
+              size="large"
+              sx={{ width: "20vw", height: "10vh", fontSize: "1.5vw", fontWeight: "bolder", justifyContent: 'flex-start' }}
+              onClick={this.props.tomatch}
+            > 
+              Match
+            </Button>
+            <Button 
+              variant="contained" 
+              startIcon={<MilitaryTechIcon sx={{ width: "5vw", height: "5vh"}} />} 
+              size="large"
+              sx={{ width: "20vw", height: "10vh", fontSize: "1.5vw", fontWeight: "bolder", justifyContent: 'flex-start' }}
+              onClick={this.props.torank}
+            >
+              Rank
+            </Button>
+          </Stack>
         </div>
       );
     }
@@ -409,10 +457,11 @@ class Start extends React.Component {
                 height: "40%",
                 textAlign: "center",
                 fontSize: "10vw",
-                fontWeight: "bold"
+                fontWeight: "bold",
+                WebkitTextStroke: "2px black"
               }}
             >
-              O<div style={{color: "white"}}>m</div>o<div style={{color: "white"}}>k</div> &nbsp; <div style={{color: "brown"}}>Online</div>
+              <div style={{color: "white"}}>O</div><div style={{color: "white"}}>m</div><div style={{color: "white"}}>o</div><div style={{color: "white"}}>k</div> &nbsp; <div style={{color: "orange"}}>Online</div>
             </div>
             {this.state.is_login? this.after() : this.before()}
           </div>
