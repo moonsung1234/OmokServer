@@ -6,6 +6,7 @@ import { isMobile } from "react-device-detect";
 
 // component
 import Board from "./board";
+import BoardAI from "./board_ai";
 import Start from "./start";
 import Login from "./login";
 import SignUp from "./signup";
@@ -21,13 +22,13 @@ class Main extends React.Component {
   constructor(props) {
     super(props);
   
-    this.state = { component : <Start is_mobile={isMobile} socket={socket} toplay={this.login.bind(this)} tomatch={this.match.bind(this)} torank={this.rank.bind(this)} /> };
+    this.state = { component : <Start is_mobile={isMobile} socket={socket} toplay={this.login.bind(this)} tomatch={this.match.bind(this)} torank={this.rank.bind(this)} toboardai={this.boardAI.bind(this)} /> };
     this.is_call = false;
     // this.state = { component : <Rank /> }
   }
 
   start() {
-    this.setState({ component : <Start is_mobile={isMobile} socket={socket} toplay={this.login.bind(this)} tomatch={this.match.bind(this)} torank={this.rank.bind(this)} /> });
+    this.setState({ component : <Start is_mobile={isMobile} socket={socket} toplay={this.login.bind(this)} tomatch={this.match.bind(this)} torank={this.rank.bind(this)} toboardai={this.boardAI.bind(this)} /> });
   }
 
   login() {
@@ -44,6 +45,10 @@ class Main extends React.Component {
 
   board(info) {
     this.setState({ component : <Board is_mobile={isMobile} socket={socket} info={info} tostart={this.start.bind(this)} /> });
+  }
+
+  boardAI() {
+    this.setState({ component : <BoardAI /> })
   }
 
   rank() {

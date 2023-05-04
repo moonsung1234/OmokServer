@@ -95,7 +95,7 @@ class Start extends React.Component {
               startIcon={<ComputerIcon sx={{ width: "5vw", height: "5vh"}} />} 
               size="large"
               sx={{ width: "20vw", height: "10vh", fontSize: "1.5vw", fontWeight: "bolder", justifyContent: 'flex-start' }}
-              onClick={() => alert("개발중")}
+              onClick={this.props.toboardai}
             >
               Computer
             </Button>

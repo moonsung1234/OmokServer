@@ -18,7 +18,9 @@
   },
   "homepage": "https://github.com/moonsung1234/OmokServer#readme",
   "dependencies": {
+    "axios": "^1.4.0",
     "express": "^4.18.2",
+    "http-proxy-middleware": "^2.0.6",
     "mysql2": "^3.0.1",
     "react-device-detect": "^2.2.3",
     "socket.io": "^4.5.4"
