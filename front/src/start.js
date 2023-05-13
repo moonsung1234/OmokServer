@@ -2,6 +2,8 @@
 import * as React from "react";
 import axios from "axios";
 
+import Title from "./omok_title.PNG";
+
 // mui
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
@@ -80,7 +82,7 @@ class Start extends React.Component {
             height: "60%",
           }}
         > 
-          <Stack direction="column" spacing={5}>
+          <Stack direction="column" spacing={2}>
             <Button 
               variant="contained" 
               startIcon={<SportsEsportsIcon sx={{ width: "5vw", height: "5vh"}}/>}
@@ -444,26 +446,50 @@ class Start extends React.Component {
             id="start"
             style={{ 
               width: "100vw",
-              height: "100vh"
+              height: "100vh",
+              // background: "#FFCC99"
             }}
           >
-            <div 
-              id="title"
+            <div
+              id="circle"
               style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                width: "100%",
-                height: "40%",
-                textAlign: "center",
-                fontSize: "10vw",
-                fontWeight: "bold",
-                WebkitTextStroke: "2px black"
+                background: "rgb(255, 255, 255)",
+                position: "relative",
+                display: "block",
+                width: "70vw",
+                padding: "50px",
+                border: "1px solid while",
+                borderRadius: "35vw",
+                top: "40%",
+                left: "50%",
+                transform: "translate(-50%, -50%)"
               }}
             >
-              <div style={{color: "white"}}>O</div><div style={{color: "white"}}>m</div><div style={{color: "white"}}>o</div><div style={{color: "white"}}>k</div> &nbsp; <div style={{color: "orange"}}>Online</div>
+              <div 
+                id="title"
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: "100%",
+                  height: "40%",
+                  textAlign: "center",
+                  fontSize: "10vw",
+                  fontWeight: "bold",
+                  WebkitTextStroke: "2px black"
+                }}
+              >
+                <img 
+                  src={Title}
+                  style={{
+                    width: "900px",
+                    height: "250px"
+                  }}
+                />
+                {/* <div style={{color: "white"}}>O</div><div style={{color: "white"}}>m</div><div style={{color: "white"}}>o</div><div style={{color: "white"}}>k</div> &nbsp; <div style={{color: "orange"}}>Online</div> */}
+              </div>
+              {this.state.is_login? this.after() : this.before()}
             </div>
-            {this.state.is_login? this.after() : this.before()}
           </div>
         );
       }

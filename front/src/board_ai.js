@@ -2,18 +2,25 @@
 import React from "react";
 import axios from "axios";
 import Omok from "./omok";
+import Button from '@mui/material/Button';
+import ButtonGroup from '@mui/material/ButtonGroup';
 import { gomokuMain, setGame, playerMove, turnNext, getBoard } from "./gomoku_ai";
 
 class Board extends React.Component {
     constructor(props) {
       super(props);
 
+      console.log(this.props.ai_level);
+
+      this.ai_level = this.props.ai_level;
       this.pos = [-1, -1];
-      this.ai_level = prompt("ai 단계를 설정해주세요. (1 : easy, 2 : middle, 3 : hard)");
-
-      if(["1", "2", "3"].indexOf(this.ai_level) == -1) this.ai_level = 1;
-
-      this.ai_level = parseInt(this.ai_level);
+      
+      if(this.ai_level != undefined) {
+        this.state = { "p1" : `Computer lv ${this.ai_level}`, "p2" : "You" }
+      
+      } else {
+        this.state = { "p1" : "Player 1", "p2" : "Player 2" }
+      }
 
       console.log(this.ai_level);
 
@@ -126,22 +133,26 @@ class Board extends React.Component {
         }
       });
     }
-  
-    renderMobile() {
+
+    render() {
       return (
         <div
           id="body"
           style={{
-            width: "100vw",
-            height: "100vh"
+            width: "100%",
+            height: "100vh",
+            display: "flex",
+            // zIndex: 1
           }}
         >
           <div 
             id="fp"
             style={{
               background: "white",
-              width: "100%",
-              height: "15%",
+              width: "20%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
               fontSize: "3vw",
               fontWeight: "bold",
               color: "black"
@@ -150,24 +161,26 @@ class Board extends React.Component {
             <div 
               id="title"
             >
-              {this.turn == this.omok.white_c? this.player.id : this.props.info.player.id}
+              {this.state.p1}
             </div>
           </div>
           <div 
             id="board"
             style={{
-              width: "100%",
-              height: "100vw"
+              width: "60%",
+              height: "100%"
             }}
           >
-            {this.setMobile()}
+            {this.set()}
           </div>
           <div 
             id="sp"
             style={{
               background: "gray",
-              width: "100%",
-              height: "15%",
+              width: "20%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
               fontSize: "3vw",
               fontWeight: "bold",
               color: "black"
@@ -176,77 +189,11 @@ class Board extends React.Component {
             <div 
               id="title"
             >
-              {this.turn == this.omok.black_c? this.player.id : this.props.info.player.id}
+              {this.state.p2}
             </div>
           </div>
         </div>
       );
-    }
-
-    render() {
-    //   if(this.is_mobile) {
-    //     return this.renderMobile();
-
-    //   } else {
-        return (
-            <div
-            id="body"
-            style={{
-                width: "100vw",
-                height: "100vh",
-                display: "flex"
-            }}
-            >
-                <div 
-                    id="fp"
-                    style={{
-                    background: "white",
-                    width: "20%",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    fontSize: "3vw",
-                    fontWeight: "bold",
-                    color: "black"
-                    }}
-                >
-                    <div 
-                        id="title"
-                    >
-                        Computer
-                    </div>
-                </div>
-                <div 
-                    id="board"
-                    style={{
-                    width: "60%",
-                    height: "100vh"
-                    }}
-                >
-                    {this.set()}
-                </div>
-                <div 
-                    id="sp"
-                    style={{
-                    background: "gray",
-                    width: "20%",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    fontSize: "3vw",
-                    fontWeight: "bold",
-                    color: "black"
-                    }}
-                >
-                    <div 
-                        id="title"
-                    >
-                        You
-                    </div>
-                </div>
-            </div>
-        );
-    //   }
     }
 }
 
