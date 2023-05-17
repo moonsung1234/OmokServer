@@ -1,8 +1,10 @@
 
 // module
-import React from "react";
+import React, { createRef } from "react";
+import axios from "axios";
 import io from "socket.io-client";
 import { isMobile } from "react-device-detect";
+import Omok from "./omok";
 
 // component
 import Board from "./board";
@@ -28,51 +30,73 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import TextField from '@mui/material/TextField';
 
-let socket = io.connect(window.location.href);
+// let socket = io.connect(window.location.href);
 
 class Main extends React.Component {
   constructor(props) {
     super(props);
   
-    this.state = { 
-      p1 : "Player 1", 
+    this.state = {
+      p1 : "Player 1",
       p2 : "Player 2",
       checked : [false, false, false]
     }
+    this.socket = io.connect(window.location.href);;
     this.ai_level = 0;
     this.pos = [-1, -1];
     this.is_call = false;
+    this.is_match = false;
+    this.login_id = createRef();
+    this.login_pw = createRef();
+    this.signup_id = createRef();
+    this.signup_pw = createRef();
+
+    this.socket.on("match", info => {
+      let parsed_info = JSON.parse(info);
+
+      this.omok = new Omok();
+      this.omok.set();
+
+      this.turn = parsed_info.turn;
+      this.is_match = true;
+      this.player = JSON.parse(window.sessionStorage.getItem("player"));
+      
+      this.state.p1 = this.turn == this.omok.white_c? this.player.id : parsed_info.player.id;
+      this.state.p2 = this.turn == this.omok.black_c? this.player.id : parsed_info.player.id;
+
+      this.show({});
+      this.setState(this.state);
+    });
+
+    this.socket.on("put", pos => {
+      let [x, y] = pos;
+
+      this.put(x, y);
+    });
+
+    this.socket.on("out", () => {
+      // this.socket.emit("win", JSON.stringify(this.player));
+      alert("상대방이 나갔습니다.");
+    
+      let target_all = document.querySelectorAll("td");
+
+      this.omok.set();
+      this.state.p1 = "Player 1";
+      this.state.p2 = "Player 2";
+      target_all.forEach(td => {
+        td.style.backgroundColor = "#FFCC99"
+        td.innerHTML = "⠀"
+      });
+      
+      this.is_match = false;
+      this.show({ overlay : true, start : true });
+    });
+
+    this.socket.on("end", () => {
+      this.omok.set();
+      this.show({ overlay : true, start : true });
+    });
   }
-
-  // start() {
-  //   this.setState({ component : <Start is_mobile={isMobile} socket={socket} toplay={this.login.bind(this)} tomatch={this.match.bind(this)} torank={this.rank.bind(this)} toboardai={this.boardAI.bind(this)} /> });
-  // }
-
-  // login() {
-  //   this.setState({ component : <Login is_mobile={isMobile} socket={socket} tostart={this.start.bind(this)} tosignup={this.signup.bind(this)} /> });
-  // }
-
-  // signup() {
-  //   this.setState({ component : <SignUp is_mobile={isMobile} socket={socket} tostart={this.start.bind(this)} tologin={this.login.bind(this)} /> });
-  // }
-
-  // match() {
-  //   this.setState({ component : <Match socket={socket} tostart={this.start.bind(this)} toboard={this.board.bind(this)} /> });
-  // }
-
-  // board(info) {
-  //   this.setState({ component : <Board is_mobile={isMobile} socket={socket} info={info} tostart={this.start.bind(this)} /> });
-  // }
-
-  // boardAI(level) {
-  //   console.log(level);
-
-  //   this.setState({ component : <BoardAI ai_level={level} /> })
-  // }
-
-  // rank() {
-  //   this.setState({ component : <Rank socket={socket} tostart={this.start.bind(this)} /> })
-  // }
 
   componentDidMount() {
     if(this.is_call) return;
@@ -170,6 +194,53 @@ class Main extends React.Component {
     );
   }
 
+  end() {
+    let data = {};
+    let result = this.omok.turn == this.turn? "win" : "lose";
+    
+    data[this.player.id] = { 
+      id : this.player.id, 
+      state : result 
+    };
+    data[this.props.info.player.id] = { 
+      id : this.props.info.player.id,
+      state : result == "win"? "lose" : "win" 
+    }
+    
+    this.socket.emit("end", JSON.stringify(data));
+  }
+
+  put(x, y) {
+    let turn = this.omok.turn;
+    let result = this.omok.put(x, y);
+    let target = document.querySelector("td[id='" + `${x} ${y}` + "']");
+    let target_all = document.querySelectorAll("td");
+    
+    if(result == false) {
+      alert("렌주룰 규칙에 귀반되는 위치입니다.");
+
+       return;
+    }
+
+    target.style.background = turn == this.omok.black_c? "black" : "white";
+    this.mark(x, y);
+
+    if(result) {
+      alert((turn == this.omok.black_c? "black" : "white") + " win!");
+      
+      this.omok.set();
+      this.state.p1 = "Player 1";
+      this.state.p2 = "Player 2";
+      target_all.forEach(td => {
+        td.style.backgroundColor = "#FFCC99"
+        td.innerHTML = "⠀"
+      });
+      
+      this.is_match = false;
+      this.show({ overlay : true, start : true });
+    }
+  }
+
   mark(x, y) {
     let [bx, by] = this.pos;
     let before_target = document.querySelector("td[id='" + `${bx} ${by}` + "']");
@@ -186,46 +257,52 @@ class Main extends React.Component {
     let target_all = document.querySelectorAll("td");
     let [x, y] = target.id.split(" ").map(n => parseInt(n));
     
-    if(getBoard()[x][y] != 0) return;
+    if(this.is_match) {
+      if(this.turn != this.omok.turn) return;
+  
+      this.socket.emit("put", [x, y]);    
+      this.put(x, y);
 
-    playerMove(x, y);      
-    target.style.backgroundColor = "black";
-    this.mark(x, y);
+    } else {
+      if(getBoard()[x][y] != 0) return;
+  
+      playerMove(x, y);      
+      target.style.backgroundColor = "black";
+      this.mark(x, y);
+  
+      turnNext((xn, yn, state) => {
+        let com_target = document.querySelector("td[id='" + `${xn} ${yn}` + "']");
+        
+        if(com_target != null) com_target.style.backgroundColor = "white";
+        this.mark(xn, yn);
+  
+        if(state == 1) {
+          alert("You win!")
+          
+          target_all.forEach(td => td.style.backgroundColor = "#FFCC99");
+          this.show({ overlay : true, start : true });
+          
+        } else if(state == 2) {
+          alert("Computer win!");
+          
+          target_all.forEach(td => td.style.backgroundColor = "#FFCC99");
+          this.show({ overlay : true, start : true });
+        
+        } else if(state == 3) {
+          alert("Draw!")
+          
+          target_all.forEach(td => td.style.backgroundColor = "#FFCC99");
+          this.show({ overlay : true, start : true });
+        }
+      });
+    }
 
-    turnNext((xn, yn, state) => {
-      let com_target = document.querySelector("td[id='" + `${xn} ${yn}` + "']");
-      
-      if(com_target != null) com_target.style.backgroundColor = "white";
-      this.mark(xn, yn);
-
-      if(state == 1) {
-        alert("You win!")
-        
-        target_all.forEach(td => td.style.backgroundColor = "#FFCC99");
-        gomokuMain("bla");
-        setGame(this.ai_level);
-        
-      } else if(state == 2) {
-        alert("Computer win!");
-        
-        target_all.forEach(td => td.style.backgroundColor = "#FFCC99");
-        gomokuMain("bla");
-        setGame(this.ai_level);
-      
-      } else if(state == 3) {
-        alert("Draw!")
-        
-        target_all.forEach(td => td.style.backgroundColor = "#FFCC99");
-        gomokuMain("bla");
-        setGame(this.ai_level);
-      }
-    });
   }
 
   board() {
     return (
       <div
-        id="body"
+        id="board"
         style={{
           width: "100%",
           height: "100vh",
@@ -288,7 +365,7 @@ class Main extends React.Component {
       <div
         id="start"
         style={{
-          // display: "none"
+          display: "block"
         }}
       >
         <Stack 
@@ -300,7 +377,31 @@ class Main extends React.Component {
             startIcon={<SportsEsportsIcon sx={{ width: "7vw", height: "4vw"}}/>}
             size="large"
             sx={{ width: "23vw", height: "13vh", fontSize: "2vw", fontWeight: "", justifyContent: 'flex-start' }}
-            onClick={() => alert("추후 오픈")}
+            onClick={(() => {
+              let player = window.sessionStorage.getItem("player");
+
+              if(player != null) {
+                this.show({ match : true });
+
+                let iter = setInterval(() => {
+                  if(this.is_match) clearInterval(iter); 
+
+                  let title = document.querySelector("#match");
+    
+                  if(title.innerHTML == "Matching...") {
+                    title.innerHTML = "Matching";
+                  
+                  } else {
+                    title.innerHTML = title.innerText + ".";
+                  }
+                }, 200);
+                
+                this.socket.emit("info", window.sessionStorage.getItem("player"));
+
+              } else {
+                this.show({ overlay : true, login : true });
+              }
+            }).bind(this)}
             // onClick={this.props.toplay}
 
           > 
@@ -311,10 +412,7 @@ class Main extends React.Component {
             startIcon={<Computer sx={{ width: "7vw", height: "4vw"}}/>}
             size="large"
             sx={{ width: "23vw", height: "13vh", fontSize: "2vw", fontWeight: "", justifyContent: 'flex-start' }}
-            onClick={(() => {
-              document.querySelector("#start").style.display = "none";
-              document.querySelector("#select").style.display = "flex";
-            }).bind(this)}
+            onClick={(() => this.show({ overlay : true, select : true })).bind(this)}
           > 
             Computer
           </Button>
@@ -397,6 +495,147 @@ class Main extends React.Component {
     );
   }
 
+  checkForm(id, password) {
+    let reg_exp = /[\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"]/g;
+    let n_password = password.replace(/[0-9]/g, "");
+    let a_password = password.replace(/[a-z]/g, "");
+    let na_password = password.replace(/[0-9a-z]/g, "");
+
+    // id check
+    if(id.length < 2 || id.length > 10) {
+      alert("id 길이가 너무 짧거나 깁니다. id는 2자 이상 10자 이하여야 합니다.");
+      
+      return;
+      
+    } else if(id.indexOf(" ") != -1 || id.match(reg_exp) != null) {
+      alert("id 형식이 잘못되었습니다. 특수문자나 공백을 제거해 주세요.");
+    
+      return;
+    }
+
+    // password check
+    if(password.length < 5 || password.length > 10) {
+      alert("password 길이가 너무 짧거나 깁니다. password는 5자 이상 10자 이하여야 합니다.");
+
+      return;
+    
+    } else if(n_password == password || a_password == password || na_password != "") {
+      alert("password 형식이 잘못되었습니다. password는 숫자와 알파펫이 둘 다 존재하는 형태여야 합니다.");
+    
+      return;
+    }
+
+    axios.post(window.location.href + "login", {
+      id : id,
+      password : password,
+      category : "signup"
+    })
+    .then(res => {
+      let data = res.data;
+      
+      if(data.message == "success") {
+        alert("회원가입 성공!");
+        this.show({ overlay : true, login : true });
+      
+      } else {
+        alert(data.message);
+      }
+    });
+  }
+
+  send(id, password) {
+    axios.post(window.location.href + "login", {
+      id : id,
+      password : password,
+      category : "login"
+    })
+    .then(res => {
+      let data = res.data;
+      
+      if(data.message == "success") {
+        window.sessionStorage.setItem("player", JSON.stringify(data.player));
+
+        alert("로그인 성공!");
+        this.show({ overlay : true, start : true });
+
+      } else {
+        alert(data.message);
+      }
+    });
+  }
+
+  signup() {
+    return (
+      <div
+        id="signup"
+        style={{
+          background: "white",
+          width: "25vw",
+          height: "60vh",
+          display: "none",
+          alignItems: "center",
+          justifyContent: "space-around",
+          flexDirection: "column"
+        }}
+      >
+        <div
+          id="signup_title"
+          style={{
+            fontSize: "45px",
+            fontWeight: "bold"
+          }}
+        >
+          Sign Up
+        </div>
+        <Stack 
+          direction="column" 
+          spacing={1}
+          sx={{ width: "80%" }}
+        >
+          <TextField
+            id="filled-required"
+            label="ID"
+            type="Search field"
+            inputRef={this.signup_id}
+            sx={{ width: "100%" }}
+          />
+          <TextField
+            id="filled-required"
+            label="PW"
+            type="password"
+            inputRef={this.signup_pw}
+            sx={{ width: "100%" }}
+          />
+          <div
+            id="other"
+            style={{
+              width: "100%",
+              textAlign: "center"
+            }}
+          >
+            already sign up? 
+            <a 
+              style={{ textDecoration: "underline", cursor: "pointer" }} 
+              onClick={() => this.show({ overlay : true, login : true })}
+            >
+              Login
+            </a>
+          </div>
+        </Stack>
+        <Button 
+          variant="contained" 
+          size="large"
+          sx={{ width: "70%", height: "10%", textAlign: "center" }}
+          onClick={(() => {
+            this.checkForm(this.signup_id.current.value, this.signup_pw.current.value);
+          }).bind(this)}
+        > 
+          Sign Up
+        </Button>
+      </div>
+    );
+  }
+
   login() {
     return (
       <div
@@ -405,7 +644,7 @@ class Main extends React.Component {
           background: "white",
           width: "25vw",
           height: "60vh",
-          display: "flex",
+          display: "none",
           alignItems: "center",
           justifyContent: "space-around",
           flexDirection: "column"
@@ -429,12 +668,14 @@ class Main extends React.Component {
             id="filled-required"
             label="ID"
             type="Search field"
+            inputRef={this.login_id}
             sx={{ width: "100%" }}
           />
           <TextField
             id="filled-required"
             label="PW"
             type="password"
+            inputRef={this.login_pw}
             sx={{ width: "100%" }}
           />
           <div
@@ -444,19 +685,41 @@ class Main extends React.Component {
               textAlign: "center"
             }}
           >
-            don't have account? <a href="/">Sign Up</a>
+            don't have account? 
+            <a 
+              style={{ textDecoration: "underline", cursor: "pointer" }} 
+              onClick={(() => this.show({ overlay : true, signup : true })).bind(this)}
+            >
+              Sign Up
+            </a>
           </div>
         </Stack>
         <Button 
           variant="contained" 
           size="large"
           sx={{ width: "70%", height: "10%", textAlign: "center" }}
-          onClick={() => alert("개발중...")}
+          onClick={(() => this.send(this.login_id.current.value, this.login_pw.current.value)).bind(this)}
         > 
           Login
         </Button>
       </div>
     );
+  }
+
+  show({ overlay=false, match=false, start=false, select=false, login=false, signup=false }) {
+    let overlay_component = document.querySelector("#overlay");
+    let match_component =document.querySelector("#match");
+    let start_component = document.querySelector("#start");
+    let select_component = document.querySelector("#select");
+    let login_component = document.querySelector("#login");
+    let signup_component = document.querySelector("#signup");
+
+    overlay_component.style.display = overlay? "flex" : "none";
+    match_component.style.display = match? "flex" : "none";
+    start_component.style.display = start? "block" : "none";
+    select_component.style.display = select? "flex" : "none";
+    login_component.style.display = login? "flex" : "none";
+    signup_component.style.display = signup? "flex" : "none";
   }
 
   render() {
@@ -484,9 +747,27 @@ class Main extends React.Component {
             flexDirection: "column"
           }}
         >
-          {/* {this.start()} */}
-          {/* {this.select()} */}
+          {this.start()}
+          {this.select()}
           {this.login()}
+          {this.signup()}
+        </div>
+        <div
+          id="match"
+          style={{
+            width: "100vw",
+            height: "100vh",
+            position: "absolute",
+            background: "rgba(0, 0, 0, 0.5)",
+            display: "none",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "70px",
+            color: "white",
+            fontWeight: "bold",
+          }}
+        >
+          Matching...
         </div>
         <div
           style={{
